@@ -6,23 +6,17 @@
 #include "StructFunctions.h"
 
 #define RETAIL_FILE_NAME "retail.bin"
-//#define _CRT_SECURE_NO_WARNINGS 1
 
 int main()
 {
 	/*Declaração de Variáveis*/
-	prod_pointer Produto = NULL;
+	prod_pointer ListaProdutos = NULL;
 	FILE *file;
 	char *buffer;
-	int FileLenght, NCorredores, NArmarios, resp_menu=0, resp_sub_menu=0, i, j, k, aux;
+	int FileLenght, NCorredores, NArmarios, resp_menu=0, resp_sub_menu=0, i, j, h, NProdutos_p_Armario, cArmario, cCorredor=1;
 
 	/*Abre o ficheiro*/
-	file = fopen(RETAIL_FILE_NAME, "rb");
-	if (!file)
-	{
-		printf("Erro ao abrir %s\n", RETAIL_FILE_NAME);
-		return;
-	}
+	*file = OpenStorageFile(file, RETAIL_FILE_NAME);
 
 	fseek(file, 0, SEEK_END);
 	FileLenght=ftell(file);
@@ -32,23 +26,34 @@ int main()
 
 	if(!buffer)
 	{
-		return 1;
+		return;
 	}
 	
 	fread(&NArmarios, sizeof(int), 1, file);   //Obtem numero de armarios
 	fread(&NCorredores, sizeof(int), 1, file); //Obtem numero de corredores
-	NArmarios+=1;
-	NCorredores+=1;
-	//printf("IMP: %d e %d\n", NArmarios, NCorredores);
 
-	fread(&k, sizeof(int), 1, file); //nº produtos no 1º armario --DECIDIR COMO RESOLVER ISTO
+	cArmario = 1;
+	cCorredor =1;
+	
+	for (i = 0; i < NCorredores; i++) { //corre 5 vezes
 
-	for (i = 1; i < NCorredores; i++) {
-		for (j = 1; j < NArmarios; j++) {
-			printf("Corredor: %d\nArmario: %d\n", i, j);
-			//Guarda dados na struct
-			Produto=AdicionaProduto(Produto, GetNextData(file), GetNextData(file), i, j);
+		for (h = 0; h < NArmarios; h++) {
+			fread(&NProdutos_p_Armario, sizeof(int), 1, file); //nº produtos no armario X
+			for(j = 0; j < NProdutos_p_Armario; j++) { //corre NProdutos_p_Armario vezes
+
+				//Guarda dados na struct
+				ListaProdutos=AdicionaProduto(ListaProdutos, GetNextData(file), GetNextData(file), cCorredor, cArmario);
+
+			}
+
+			cArmario++;
+			if (cArmario >= 4)
+			{
+				cArmario = 1;
+			}
+			
 		}
+		cCorredor++;
 	}
 
 	fclose(file);
@@ -91,7 +96,7 @@ int main()
 					O programa deve poder fazer listagens completas e parciais dos Produtos existentes em
 					armazém. Exemplos de listagens parciais incluem: mostrar todos os Produtos de um
 					determinado corredor/armário ou indicar a localização/quantidade em stock de um
-					Produto específico. De acordo com a preferência do utilizador, a informação pode ser
+					ListaProdutos específico. De acordo com a preferência do utilizador, a informação pode ser
 					apresentada na consola ou enviada para um ficheiro de texto. 
 				*/
 				system("CLS");
@@ -101,13 +106,13 @@ int main()
 				{
 				case 1:
 					{
-						MostraProdutos(Produto);
+						MostraProdutos(ListaProdutos);
 						system("pause");
 						break;
 					}
 				case 2:
 					{
-						EliminaProd(Produto);
+						EliminaProd(ListaProdutos);
 						system("CLS");
 						break;
 					}
@@ -132,8 +137,8 @@ int main()
 			{
 				/*		 -- Gestao de Encomendas --
 					Ao receber uma encomenda, o programa deve verificar se existem Produtos em stock
-					para satisfazer a totalidade da encomenda. Caso falte algum Produto, a encomenda é
-					cancelada e gerado um alerta sobre o Produto (ou Produtos) em falta.
+					para satisfazer a totalidade da encomenda. Caso falte algum ListaProdutos, a encomenda é
+					cancelada e gerado um alerta sobre o ListaProdutos (ou Produtos) em falta.
 				*/
 				break;
 			}
@@ -143,7 +148,7 @@ int main()
 					Deve ser possível actualizar as quantidades de Produtos existentes em armazém e
 					adicionar novos Produtos.
 					Nesta funcionalidade, o programa deve aceder ao ficheiro de texto e actualizar as
-					quantidades em stock. Se um Produto surgir no ficheiro, mas não existir em armazém,
+					quantidades em stock. Se um ListaProdutos surgir no ficheiro, mas não existir em armazém,
 					deve ser colocado num dos armários com menos diversidade de Produtos.
 				*/
 				break;
