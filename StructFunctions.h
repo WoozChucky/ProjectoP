@@ -2,17 +2,17 @@
 #include<string.h>
 #include<stdlib.h>
 
-typedef struct produto produto, *pno;
+typedef struct produto produto, *prod_pointer;
 	struct produto
 	{
 		int IDProduto;
 		int quantidade;
 		int corredor;
 		int armario;
-		pno proximo;
+		prod_pointer proximo;
 	};
 
-int verifica_lista(pno prod)
+int verifica_lista(prod_pointer prod)
 {
 	if (prod == NULL)
 		return 1;
@@ -20,7 +20,7 @@ int verifica_lista(pno prod)
 		return 0;
 }
 
-void preenche(pno prod, int IDProduto, int Quantidade, int corredor, int armario)
+void preenche(prod_pointer prod, int IDProduto, int Quantidade, int corredor, int armario)
 {
 	prod->IDProduto=IDProduto;
 	prod->quantidade=Quantidade;
@@ -29,10 +29,10 @@ void preenche(pno prod, int IDProduto, int Quantidade, int corredor, int armario
 	prod->proximo = NULL;
 }
 
-pno AdicionaProduto(pno prod,int IDProduto, int Quantidade, int corredor, int armario)
+prod_pointer AdicionaProduto(prod_pointer prod,int IDProduto, int Quantidade, int corredor, int armario)
 {
 
-	pno novo, aux;
+	prod_pointer novo, aux;
 	novo = malloc(sizeof(produto));
 
 	if(novo == NULL)
@@ -43,9 +43,14 @@ pno AdicionaProduto(pno prod,int IDProduto, int Quantidade, int corredor, int ar
 
 	preenche(novo, IDProduto, Quantidade, corredor, armario);
 
+	/*printf("ID Produto: %d\n",novo->IDProduto);
+	printf("Quantidade: %d\n", novo->quantidade);
+	printf("Coordenadas: %d%d\n", novo->corredor, novo->armario);*/
+
 	if(verifica_lista(prod))
 	{
 		prod = novo;
+		printf("Lista Vazia! 1 Produto inserido com sucesso!\n\n");
 	}
 	else
 	{
@@ -54,12 +59,13 @@ pno AdicionaProduto(pno prod,int IDProduto, int Quantidade, int corredor, int ar
 			while(aux->proximo != NULL)
 				aux = aux->proximo;
 			aux->proximo = novo;
+			printf("Produto inserido com sucesso no fim da lista!\n\n");
 	}
 	
 	return prod;
 }
 
-void MostraProdutos(pno prod)
+void MostraProdutos(prod_pointer prod)
 {
 	while(prod != NULL)
 	{
@@ -70,64 +76,11 @@ void MostraProdutos(pno prod)
 	}
 }
 
-void MostraProdutobyQuantidade(pno prod, int Quantidade)
+prod_pointer EliminaProd(prod_pointer prod)
 {
-	while(prod != NULL && prod->quantidade != Quantidade)
-	{
-		prod = prod->proximo;
-	}
-		printf("\nProdutos Encontrados:\n\n");
-		printf("ID Produto: %d\n",prod->IDProduto);
-		printf("Quantidade: %d\n", prod->quantidade);
-		printf("Coordenadas: Corredor->%d    Armario->%d\n\n", prod->corredor, prod->armario);
-}
-
-pno EliminaProd(pno prod, int ProdID)
-{
-	pno actual, anterior = NULL;
+	prod_pointer actual;
 	actual = prod;
-
-	while(actual != NULL && actual->IDProduto != ProdID) //percorre toda a lista ate encontrar o ProdID passado por parametro
-	{
-		anterior = actual;
-		actual = actual->proximo;
-	}
-
-	if(actual==NULL)
-		return prod;
-	if(anterior==NULL)
-		prod = actual->proximo;
-	else
-		anterior->proximo = actual->proximo;
-
+	prod = actual->proximo;
 	free(actual);
 	return prod;
-}
-
-void ApagaStruct(pno prod)
-{
-	pno aux;
-
-	while(prod != NULL)
-	{
-		aux = prod;
-		prod = prod->proximo;
-		free(aux);
-	}
-}
-
-void GuardaStruct(pno prod)
-{
-	FILE *RetailFile;
-	char *buffer={NULL};
-
-	RetailFile = OpenStorageFile(&RetailFile, RETAIL_FILE_NAME);
-	buffer = BufferSpaceAlloc(&RetailFile, buffer);
-
-	while(prod != NULL)
-	{
-		fwrite(prod, sizeof(produto), 1, RetailFile);
-		prod = prod->proximo;
-	}
-	fclose(RetailFile);
 }
