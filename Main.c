@@ -5,47 +5,36 @@
 #include "FileFunctions.h"
 #include "StructFunctions.h"
 
-#define RETAIL_FILE_NAME "retail.bin"
+#pragma region Declaração_De_Variáveis
+	pno ListaProdutos = NULL;													//struct da lista de produtos
+	FILE *RetailFile;															//ficheiro do armazem/retail.bin
+	char *buffer={NULL};														//buffer para leitura do ficheiro
+	int NCorredores, NArmarios, NProdutos_p_Armario, cArmario=1, cCorredor=1;   //vars do armazem
+	int i, j, h;																//vars dos for's
+	typedef enum {sair_menu=4, ver=1, gerir=2, stocks=3} RespostaMenu;			//vars dos menus
+	RespostaMenu answer_menu;
+	typedef enum {total=1, corredor=2, armario=3, coordenadas=4, quantidade=5, sair_ver=6} RespostaVer;
+	RespostaVer answer_ver;
+	int qnt;
+#pragma endregion
 
 int main()
 {
-	/*Declaração de Variáveis*/
-	prod_pointer ListaProdutos = NULL;
-	FILE *file;
-	char *buffer;
-	int FileLenght, NCorredores, NArmarios, resp_menu=0, resp_sub_menu=0, i, j, h, NProdutos_p_Armario, cArmario, cCorredor=1;
-
-	/*Abre o ficheiro*/
-	*file = OpenStorageFile(file, RETAIL_FILE_NAME);
-
-	fseek(file, 0, SEEK_END);
-	FileLenght=ftell(file);
-	fseek(file, 0, SEEK_SET);
-
-	buffer=(char *)malloc(FileLenght+1);
-
-	if(!buffer)
-	{
-		return;
-	}
+	/*Abre o ficheiro de retail*/
+	RetailFile = OpenStorageFile(&RetailFile, RETAIL_FILE_NAME);
+	/* Aloca Espaço necessario no buffer*/
+	buffer = BufferSpaceAlloc(&RetailFile, buffer);
 	
-	fread(&NArmarios, sizeof(int), 1, file);   //Obtem numero de armarios
-	fread(&NCorredores, sizeof(int), 1, file); //Obtem numero de corredores
-
-	cArmario = 1;
-	cCorredor =1;
+	fread(&NArmarios, sizeof(int), 1, RetailFile);   //Obtem numero de armarios
+	fread(&NCorredores, sizeof(int), 1, RetailFile); //Obtem numero de corredores
 	
-	for (i = 0; i < NCorredores; i++) { //corre 5 vezes
-
+	for (i = 0; i < NCorredores; i++) {
 		for (h = 0; h < NArmarios; h++) {
-			fread(&NProdutos_p_Armario, sizeof(int), 1, file); //nº produtos no armario X
-			for(j = 0; j < NProdutos_p_Armario; j++) { //corre NProdutos_p_Armario vezes
-
+			fread(&NProdutos_p_Armario, sizeof(int), 1, RetailFile);
+			for(j = 0; j < NProdutos_p_Armario; j++) { 
 				//Guarda dados na struct
-				ListaProdutos=AdicionaProduto(ListaProdutos, GetNextData(file), GetNextData(file), cCorredor, cArmario);
-
+				ListaProdutos=AdicionaProduto(ListaProdutos, GetData(RetailFile), GetData(RetailFile), cCorredor, cArmario);
 			}
-
 			cArmario++;
 			if (cArmario >= 4)
 			{
@@ -55,8 +44,7 @@ int main()
 		}
 		cCorredor++;
 	}
-
-	fclose(file);
+	fclose(RetailFile);
 
 	/*			Corredor 1
 		3P 2unidades 4 4unidades 7 78unidades 1	
@@ -84,86 +72,46 @@ int main()
 		2P 57unidades 3 58unidades 3
 
 	*/
-
-		DisplayMenu();
-		scanf("%d", &resp_menu);
-
-		switch(resp_menu)
-		{
-		case 1:
+		
+	DisplayMenu();
+		do {
+			printf("Introduza uma opcao valida:\n");
+			scanf("%d", &answer_menu);
+			switch(answer_menu)
 			{
-				/*     -- Visualização / Pesquisa --
-					O programa deve poder fazer listagens completas e parciais dos Produtos existentes em
-					armazém. Exemplos de listagens parciais incluem: mostrar todos os Produtos de um
-					determinado corredor/armário ou indicar a localização/quantidade em stock de um
-					ListaProdutos específico. De acordo com a preferência do utilizador, a informação pode ser
-					apresentada na consola ou enviada para um ficheiro de texto. 
-				*/
+			case ver:
 				system("CLS");
 				DisplayMenuVisualizacoes();
-				scanf("%d", &resp_sub_menu);
-				switch(resp_sub_menu)
-				{
-				case 1:
+				do{
+					printf("Insere uma opcao valida:\n");
+					scanf("%d", &answer_ver);
+					switch(answer_ver)
 					{
+					case total:
 						MostraProdutos(ListaProdutos);
-						system("pause");
+						break;
+					case corredor:
+						break;
+					case armario:
+						break;
+					case coordenadas:
+						break;
+					case quantidade:
+						printf("\nIntroduz a quantidade do produto:");
+						scanf("%d", &qnt);
+						MostraProdutobyQuantidade(ListaProdutos, qnt);
 						break;
 					}
-				case 2:
-					{
-						EliminaProd(ListaProdutos);
-						system("CLS");
-						break;
-					}
-				case 3:
-					{
-						system("CLS");
-						break;
-					}
-				case 4:
-					{
-						break;
-					}
-				default:
-					{
-						printf("Opcao Invalida!\n");
-						break;
-					}
-				}			
+				}while(answer_ver != sair_ver);
+				break;
+			case gerir:
+				system("CLS");
+				DisplayMenuEncomendas();
+				break;
+			case stocks:
+				DisplayMenuStocks();
 				break;
 			}
-		case 2:
-			{
-				/*		 -- Gestao de Encomendas --
-					Ao receber uma encomenda, o programa deve verificar se existem Produtos em stock
-					para satisfazer a totalidade da encomenda. Caso falte algum ListaProdutos, a encomenda é
-					cancelada e gerado um alerta sobre o ListaProdutos (ou Produtos) em falta.
-				*/
-				break;
-			}
-		case 3:
-			{
-				/*		-- Reposição de Stocks --
-					Deve ser possível actualizar as quantidades de Produtos existentes em armazém e
-					adicionar novos Produtos.
-					Nesta funcionalidade, o programa deve aceder ao ficheiro de texto e actualizar as
-					quantidades em stock. Se um ListaProdutos surgir no ficheiro, mas não existir em armazém,
-					deve ser colocado num dos armários com menos diversidade de Produtos.
-				*/
-				break;
-			}
-		case 4:
-			{
-				break;
-				return EXIT_SUCCESS;
-			}
-		default:
-			{
-				printf("Opcao Invalida! Programa vai Terminar!\n");
-				return EXIT_FAILURE;
-			}
-		}
-	//Programa nao deve chegar aqui #TESTE#
-	printf("\n#TESTE#\n");
+		} while (answer_menu != sair_menu);
+		printf("Opcao Invalida! SET_ENUM_TYPE 1");
 }
