@@ -1,50 +1,53 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#include<time.h>
+#include <direct.h>
 #include "Displays.h"
 #include "FileFunctions.h"
 #include "StructFunctions.h"
 
 #pragma region Declaração_De_Variáveis
-	pno ListaProdutos = NULL;													//struct da lista de produtos
-	FILE *RetailFile;															//ficheiro do armazem/retail.bin
-	char *buffer={NULL};														//buffer para leitura do ficheiro
-	int NCorredores, NArmarios, NProdutos_p_Armario, cArmario=1, cCorredor=1;   //vars do armazem
-	int i, j, h;																//vars dos for's
-	typedef enum {sair_menu=4, ver=1, gerir=2, stocks=3} RespostaMenu;			//vars dos menus
+	pno ListaProdutos = NULL;																	//struct da lista de produtos
+	FILE *RetailFile;																			//ficheiro do armazem/retail.bin
+	char *buffer={NULL};																		//buffer para leitura do ficheiro
+	char filename[256];
+	typedef enum {
+		ver=1, 
+		gerir=2, 
+		stocks=3, 
+		configuracoes=4, 
+		sair_menu=5
+	} RespostaMenu;			
 	RespostaMenu answer_menu;
-	typedef enum {total=1, corredor=2, armario=3, coordenadas=4, quantidade=5, sair_ver=6} RespostaVer;
+
+	typedef enum {
+		total=1, 
+		corredor=2, 
+		armario=3, 
+		coordenadas=4, 
+		quantidade=5, 
+		sair_ver=6} 
+	RespostaVer;
 	RespostaVer answer_ver;
-	int qnt;
+
+	int qnt, search_corredor, search_armario, DisplayMode;
 #pragma endregion
 
 int main()
 {
+	DisplayMode=GetDisplayMode();
+	printf("Display: %d\n", DisplayMode);
+	//UpdateSession(CONFIG_FILE_NAME);
 	/*Abre o ficheiro de retail*/
-	RetailFile = OpenStorageFile(&RetailFile, RETAIL_FILE_NAME);
+	RetailFile = OpenFile(&RetailFile, RETAIL_FILE_NAME, "rb");
 	/* Aloca Espaço necessario no buffer*/
 	buffer = BufferSpaceAlloc(&RetailFile, buffer);
-	
-	fread(&NArmarios, sizeof(int), 1, RetailFile);   //Obtem numero de armarios
-	fread(&NCorredores, sizeof(int), 1, RetailFile); //Obtem numero de corredores
-	
-	for (i = 0; i < NCorredores; i++) {
-		for (h = 0; h < NArmarios; h++) {
-			fread(&NProdutos_p_Armario, sizeof(int), 1, RetailFile);
-			for(j = 0; j < NProdutos_p_Armario; j++) { 
-				//Guarda dados na struct
-				ListaProdutos=AdicionaProduto(ListaProdutos, GetData(RetailFile), GetData(RetailFile), cCorredor, cArmario);
-			}
-			cArmario++;
-			if (cArmario >= 4)
-			{
-				cArmario = 1;
-			}
-			
-		}
-		cCorredor++;
-	}
+	/* Preenche a lista dos produtos lendo o ficheiro de retail */
+	ListaProdutos=InitializeRetailWarehouse(ListaProdutos, RetailFile);
+	/* fecha o ficheiro */
 	fclose(RetailFile);
+	
 
 	/*			Corredor 1
 		3P 2unidades 4 4unidades 7 78unidades 1	
@@ -88,13 +91,25 @@ int main()
 					switch(answer_ver)
 					{
 					case total:
-						MostraProdutos(ListaProdutos);
+						if(DisplayMode==1){
+							MostraProdutos(ListaProdutos);
+						}else{
+							printf("Introduza o nome do ficheiro sem extensao: ");
+							scanf("%s", &filename);
+							GuardaPesquisa(ListaProdutos, filename);
+						}
 						break;
 					case corredor:
 						break;
 					case armario:
 						break;
-					case coordenadas:
+					case coordenadas: // not working
+						printf("Insere o numero do corredor: ");
+						scanf("%d", &search_corredor);
+						printf("\nInsere o numero do armario: ");
+						scanf("%d", &search_armario);
+
+						MostraProdutobyCoordenadas(ListaProdutos, search_corredor, search_armario);
 						break;
 					case quantidade:
 						printf("\nIntroduz a quantidade do produto:");
@@ -111,7 +126,10 @@ int main()
 			case stocks:
 				DisplayMenuStocks();
 				break;
+			case configuracoes:
+				DisplayMenuConfiguracoes();
+				
 			}
 		} while (answer_menu != sair_menu);
-		printf("Opcao Invalida! SET_ENUM_TYPE 1");
+		printf("Ate uma proxima!\n");
 }

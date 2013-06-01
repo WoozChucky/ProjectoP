@@ -21,7 +21,8 @@ void DisplayMenu()
 	printf("\t\t 1 - Visualizacao de Produtos\n");
 	printf("\t\t 2 - Gestao de Encomendas\n");
 	printf("\t\t 3 - Reposicao Stocks\n");
-	printf("\t\t 4 - Sair\n");
+	printf("\t\t 4 - Configuracoes\n");
+	printf("\t\t 5 - Sair\n");
 }
 void DisplayMenuVisualizacoes()
 {
@@ -47,5 +48,12 @@ void DisplayMenuEncomendas()
 {
 	printf("\t\t\t      **Menu de Encomendas**\n\n");
 	printf("\t\t 1 - Encomendas\n");
+	printf("\t\t 2 - Sair\n");
+}
+
+void DisplayMenuConfiguracoes()
+{
+	printf("\t\t\t      **Menu de Configuracoes**\n\n");
+	printf("\t\t 1 - Modo de Display\n");
 	printf("\t\t 2 - Sair\n");
 }
