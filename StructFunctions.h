@@ -13,32 +13,7 @@ typedef struct produto produto, *pno;
 		pno proximo;
 	};
 
-pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
-	{
-		int NCorredores, NArmarios, NProdutos_p_Armario, cArmario=1, cCorredor=1;   //vars do armazem
-		int i, j, h;																//vars dos for's
 
-		fread(&NArmarios, sizeof(int), 1, RetailFile);   //Obtem numero de armarios
-		fread(&NCorredores, sizeof(int), 1, RetailFile); //Obtem numero de corredores
-	
-		for (i = 0; i < NCorredores; i++) {
-			for (h = 0; h < NArmarios; h++) {
-				fread(&NProdutos_p_Armario, sizeof(int), 1, RetailFile);
-				for(j = 0; j < NProdutos_p_Armario; j++) { 
-					//Guarda dados na struct
-					ListaProdutos=AdicionaProduto(ListaProdutos, GetData(RetailFile), GetData(RetailFile), cCorredor, cArmario);
-				}
-				cArmario++;
-				if (cArmario >= 4)
-				{
-					cArmario = 1;
-				}
-			
-			}
-			cCorredor++;
-		}
-		return ListaProdutos;
-	}
 
 int verifica_lista(pno prod)
 {
@@ -86,6 +61,33 @@ pno AdicionaProduto(pno prod,int IDProduto, int Quantidade, int corredor, int ar
 	
 	return prod;
 }
+
+pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
+	{
+		int NCorredores, NArmarios, NProdutos_p_Armario, cArmario=1, cCorredor=1;   //vars do armazem
+		int i, j, h;																//vars dos for's
+
+		fread(&NArmarios, sizeof(int), 1, RetailFile);   //Obtem numero de armarios
+		fread(&NCorredores, sizeof(int), 1, RetailFile); //Obtem numero de corredores
+	
+		for (i = 0; i < NCorredores; i++) {
+			for (h = 0; h < NArmarios; h++) {
+				fread(&NProdutos_p_Armario, sizeof(int), 1, RetailFile);
+				for(j = 0; j < NProdutos_p_Armario; j++) { 
+					//Guarda dados na struct
+					ListaProdutos=AdicionaProduto(ListaProdutos, GetData(RetailFile), GetData(RetailFile), cCorredor, cArmario);
+				}
+				cArmario++;
+				if (cArmario >= 4)
+				{
+					cArmario = 1;
+				}
+			
+			}
+			cCorredor++;
+		}
+		return ListaProdutos;
+	}
 
 /* Mostra na Consola */
 
@@ -259,7 +261,7 @@ void GuardaPesquisabyCoordenadas(pno prod, char *filename, int corredor, int arm
 	
 	file = OpenFile(&file, filename, "a+");
 
-	fprintf(file, "\tResultado da Pesquisa\n\n");
+	fprintf(file, "\tResultado da Pesquisa\n\nCorredor: %d\nArmario: %d\n\n", corredor, armario);
 
 	while(prod != NULL)
 	{
@@ -285,7 +287,76 @@ void GuardaPesquisabyCoordenadas(pno prod, char *filename, int corredor, int arm
 
 void GuardaPesquisabyCorredor(pno prod, char *filename, int corredor)
 {
-	// ESTOU AQUI!!
+	FILE *file;
+	time_t DataActual;
+	char* c_DataActual;
+	char *ext=".txt";
+
+	DataActual = time(NULL);
+	c_DataActual = ctime(&DataActual);
+	
+	strcat(filename, ext);
+	
+	file = OpenFile(&file, filename, "a+");
+
+	fprintf(file, "\tResultado da Pesquisa\n\nCorredor: %d\n\n", corredor);
+
+	while(prod != NULL)
+	{
+		if(prod->corredor == corredor) {
+			fprintf(file, "ID Produto: %d\n",prod->IDProduto);
+			fprintf(file, "Quantidade: %d\n\n", prod->quantidade);
+		}
+		prod = prod->proximo;
+
+		if(prod == NULL)
+		{
+			printf("\nProduto nao encontrado ou lista chegou ao fim!\n");
+		}
+	}
+
+	fprintf(file, "\n\n%s", c_DataActual);
+
+	fclose(file);
+
+	printf("\nFicheiro %s criado com sucesso.\n\n", filename);
+}
+
+void GuardaPesquisabyArmario(pno prod, char *filename, int armario)
+{
+	FILE *file;
+	time_t DataActual;
+	char* c_DataActual;
+	char *ext=".txt";
+
+	DataActual = time(NULL);
+	c_DataActual = ctime(&DataActual);
+	
+	strcat(filename, ext);
+	
+	file = OpenFile(&file, filename, "a+");
+
+	fprintf(file, "\tResultado da Pesquisa\n\nArmario: %d\n\n", armario);
+
+	while(prod != NULL)
+	{
+		if(prod->armario == armario) {
+			fprintf(file, "ID Produto: %d\n",prod->IDProduto);
+			fprintf(file, "Quantidade: %d\n\n", prod->quantidade);
+		}
+		prod = prod->proximo;
+
+		if(prod == NULL)
+		{
+			printf("\nProduto nao encontrado ou lista chegou ao fim!\n");
+		}
+	}
+
+	fprintf(file, "\n\n%s", c_DataActual);
+
+	fclose(file);
+
+	printf("\nFicheiro %s criado com sucesso.\n\n", filename);
 }
 
 void GuardaStruct(pno prod)

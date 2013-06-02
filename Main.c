@@ -2,7 +2,6 @@
 #include<string.h>
 #include<stdlib.h>
 #include<time.h>
-#include <direct.h>
 #include "Displays.h"
 #include "FileFunctions.h"
 #include "StructFunctions.h"
@@ -16,9 +15,9 @@
 
 #pragma region Declaração_De_Variáveis
 
-	pno ListaProdutos = NULL;																	//struct da lista de produtos
-	FILE *RetailFile;																			//ficheiro do armazem/retail.bin
-	char *buffer={NULL};																		//buffer para leitura do ficheiro
+	pno ListaProdutos = NULL;
+	FILE *RetailFile;
+	char *buffer={NULL};
 	char filename[256];
 	
 	typedef enum {
@@ -53,12 +52,9 @@
 int main()
 {
 	DisplayMode=GetDisplayMode();
-	printf("Display: %d\n", DisplayMode);
-	//UpdateSession(CONFIG_FILE_NAME);
+
 	/*Abre o ficheiro de retail*/
 	RetailFile = OpenFile(&RetailFile, RETAIL_FILE_NAME, "rb");
-	/* Aloca Espaço necessario no buffer*/
-	buffer = BufferSpaceAlloc(&RetailFile, buffer);
 	/* Preenche a lista dos produtos lendo o ficheiro de retail */
 	ListaProdutos=InitializeRetailWarehouse(ListaProdutos, RetailFile);
 	/* fecha o ficheiro */
@@ -120,11 +116,39 @@ int main()
 							DisplayMenuVisualizacoes();
 						}
 						break;
-					case corredor: //falta acabar
+					case corredor:
 						CLEAR_SCREEN();
+						printf("\nInsere o numero do corredor: ");
+						scanf("%d", &search_corredor);
+						if(DisplayMode==1){
+							MostraProdutobyCorredor(ListaProdutos, search_corredor);
+							LINE_BREAK();
+							DisplayMenuVisualizacoes();
+						} else {
+							LINE_BREAK();
+							printf("Introduza o nome do ficheiro sem extensao: ");
+							scanf("%s", &filename);
+							GuardaPesquisabyCorredor(ListaProdutos, filename, corredor);
+							LINE_BREAK();
+							DisplayMenuVisualizacoes();
+						}
 						break;
-					case armario: //falta acabar
+					case armario:
 						CLEAR_SCREEN();
+						printf("\nInsere o numero do armario: ");
+						scanf("%d", &search_armario);
+						if(DisplayMode==1){
+							MostraProdutobyArmario(ListaProdutos, search_armario);
+							LINE_BREAK();
+							DisplayMenuVisualizacoes();
+						} else {
+							LINE_BREAK();
+							printf("Introduza o nome do ficheiro sem extensao: ");
+							scanf("%s", &filename);
+							GuardaPesquisabyArmario(ListaProdutos, filename, search_armario);
+							LINE_BREAK();
+							DisplayMenuVisualizacoes();
+						}
 						break;
 					case coordenadas:
 						CLEAR_SCREEN();
@@ -163,11 +187,11 @@ int main()
 				}while(answer_ver != sair_ver);
 				DisplayMenu();
 				break;
-			case gerir:
+			case gerir:						//ACABAR
 				CLEAR_SCREEN();
 				DisplayMenuEncomendas();
 				break;
-			case stocks:
+			case stocks:					//ACABAR
 				CLEAR_SCREEN();
 				DisplayMenuStocks();
 				break;
