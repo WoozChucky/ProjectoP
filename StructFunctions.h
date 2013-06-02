@@ -13,8 +13,6 @@ typedef struct produto produto, *pno;
 		pno proximo;
 	};
 
-
-
 int verifica_lista(pno prod)
 {
 	if (prod == NULL)
@@ -93,19 +91,23 @@ void MostraProdutobyQuantidade(pno prod, int Quantidade)
 
 void MostraProdutobyCoordenadas(pno prod, int corredor, int armario)
 {
-	while(prod != NULL && (prod->corredor != corredor && prod->armario != armario))
+
+	while(prod != NULL)
 	{
+		if(prod->corredor == corredor && prod->armario == armario) {
+			printf("\nProduto Encontrado:\n\n");
+			printf("ID Produto: %d\n",prod->IDProduto);
+			printf("Quantidade: %d\n", prod->quantidade);
+		}
 		prod = prod->proximo;
+
+		if(prod == NULL)
+		{
+			printf("\nProduto nao encontrado!\n");
+			return;
+		}
 	}
 
-	if(prod == NULL)
-	{
-		printf("\nProduto nao encontrado!\n");
-		return;
-	}
-		printf("\nProduto Encontrados:\n\n");
-		printf("ID Produto: %d\n",prod->IDProduto);
-		printf("Quantidade: %d\n", prod->quantidade);
 }
 
 pno EliminaProd(pno prod, int ProdID)
@@ -142,35 +144,108 @@ void ApagaStruct(pno prod)
 	}
 }
 
-void GuardaPesquisa(pno prod, char *filename)
+void GuardaPesquisaTotal(pno prod, char *filename)
+{
+	FILE *file;
+	time_t DataActual;
+	char* c_DataActual;
+	char *ext=".txt";
+
+	DataActual = time(NULL);
+	c_DataActual = ctime(&DataActual);
+	
+	strcat(filename, ext);
+	
+	file = OpenFile(&file, filename, "a+");
+
+	fprintf(file, "\tResultado da Pesquisa\n\n");
+
+	while(prod != NULL)
+	{
+		fprintf(file, "ID: %d\nQuantidade: %d\n\n", prod->IDProduto, prod->quantidade);
+		prod = prod->proximo;
+	}
+
+	
+	fprintf(file, "\n\n%s", c_DataActual);
+
+	fclose(file);
+
+	printf("\nFicheiro %s criado com sucesso.\n\n", filename);
+}
+
+void GuardaPesquisabyID(pno prod, char *filename, int Quantidade)
 {
 
 	FILE *file;
 	time_t DataActual;
 	char* c_DataActual;
 	char *ext=".txt";
-	char *temp_name=SEARCH_FOLDER;
 
 	DataActual = time(NULL);
 	c_DataActual = ctime(&DataActual);
+	
 	strcat(filename, ext);
-
 	
 	file = OpenFile(&file, filename, "a+");
 
 	fprintf(file, "\tResultado da Pesquisa\n\n");
 
-	while(prod != NULL /* Inserir Argumentos de Pesquisa */)
+	while(prod != NULL && prod->quantidade != Quantidade)
 	{
-		fprintf(file, "ID: %d\nQuantidade: %d\n\n", prod->IDProduto, prod->quantidade);
 		prod = prod->proximo;
+	}
+
+	if(prod == NULL)
+	{
+		printf("\nProduto nao encontrado!\n");
+		return;
+	}
+
+	fprintf(file, "ID: %d\nQuantidade: %d\n\n", prod->IDProduto, prod->quantidade);
+	fprintf(file, "\n\n%s", c_DataActual);
+
+	fclose(file);
+
+	printf("\nFicheiro %s criado com sucesso.\n\n", filename);
+}
+
+void GuardaPesquisabyCoordenadas(pno prod, char *filename, int corredor, int armario)
+{
+	FILE *file;
+	time_t DataActual;
+	char* c_DataActual;
+	char *ext=".txt";
+
+	DataActual = time(NULL);
+	c_DataActual = ctime(&DataActual);
+	
+	strcat(filename, ext);
+	
+	file = OpenFile(&file, filename, "a+");
+
+	fprintf(file, "\tResultado da Pesquisa\n\n");
+
+	while(prod != NULL)
+	{
+		if(prod->corredor == corredor && prod->armario == armario) {
+			fprintf(file, "ID Produto: %d\n",prod->IDProduto);
+			fprintf(file, "Quantidade: %d\n", prod->quantidade);
+		}
+		prod = prod->proximo;
+
+		if(prod == NULL)
+		{
+			printf("\nProduto nao encontrado!\n");
+		}
 	}
 
 	fprintf(file, "\n\n%s", c_DataActual);
 
 	fclose(file);
 
-	printf("Ficheiro %s criado com sucesso.\n", filename);
+	printf("\nFicheiro %s criado com sucesso.\n\n", filename);
+
 }
 
 void GuardaStruct(pno prod)
@@ -187,7 +262,7 @@ void GuardaStruct(pno prod)
 	fclose(RetailFile);
 }
 
-	pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
+pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
 	{
 		int NCorredores, NArmarios, NProdutos_p_Armario, cArmario=1, cCorredor=1;   //vars do armazem
 		int i, j, h;																//vars dos for's

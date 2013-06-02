@@ -93,28 +93,46 @@ int main()
 					case total:
 						if(DisplayMode==1){
 							MostraProdutos(ListaProdutos);
+							DisplayMenuVisualizacoes();
 						}else{
 							printf("Introduza o nome do ficheiro sem extensao: ");
 							scanf("%s", &filename);
-							GuardaPesquisa(ListaProdutos, filename);
+							GuardaPesquisaTotal(ListaProdutos, filename);
+							printf("\n");
+							DisplayMenuVisualizacoes();
 						}
 						break;
 					case corredor:
 						break;
 					case armario:
 						break;
-					case coordenadas: // not working
+					case coordenadas:
 						printf("Insere o numero do corredor: ");
 						scanf("%d", &search_corredor);
 						printf("\nInsere o numero do armario: ");
 						scanf("%d", &search_armario);
-
-						MostraProdutobyCoordenadas(ListaProdutos, search_corredor, search_armario);
+						if(DisplayMode==1){
+							MostraProdutobyCoordenadas(ListaProdutos, search_corredor, search_armario);
+						} else {
+							printf("Introduza o nome do ficheiro sem extensao: ");
+							scanf("%s", &filename);
+							GuardaPesquisabyCoordenadas(ListaProdutos, filename, search_corredor, search_armario);
+							printf("\n");
+							DisplayMenuVisualizacoes();
+						}
 						break;
 					case quantidade:
 						printf("\nIntroduz a quantidade do produto:");
 						scanf("%d", &qnt);
-						MostraProdutobyQuantidade(ListaProdutos, qnt);
+						if(DisplayMode==1){
+							MostraProdutobyQuantidade(ListaProdutos, qnt);
+						} else {
+							printf("Introduza o nome do ficheiro sem extensao: ");
+							scanf("%s", &filename);
+							GuardaPesquisabyID(ListaProdutos, filename, qnt);
+							printf("\n");
+							DisplayMenuVisualizacoes();
+						}
 						break;
 					}
 				}while(answer_ver != sair_ver);
