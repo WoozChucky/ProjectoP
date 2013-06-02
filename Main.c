@@ -7,11 +7,20 @@
 #include "FileFunctions.h"
 #include "StructFunctions.h"
 
+#ifdef _WIN32
+#    define CLEAR_SCREEN() system("cls")
+#else
+#    define CLEAR_SCREEN() system("clear")
+#endif
+#define LINE_BREAK() printf("\n");
+
 #pragma region Declaração_De_Variáveis
+
 	pno ListaProdutos = NULL;																	//struct da lista de produtos
 	FILE *RetailFile;																			//ficheiro do armazem/retail.bin
 	char *buffer={NULL};																		//buffer para leitura do ficheiro
 	char filename[256];
+	
 	typedef enum {
 		ver=1, 
 		gerir=2, 
@@ -27,11 +36,18 @@
 		armario=3, 
 		coordenadas=4, 
 		quantidade=5, 
-		sair_ver=6} 
-	RespostaVer;
+		sair_ver=6
+	} RespostaVer;
 	RespostaVer answer_ver;
 
-	int qnt, search_corredor, search_armario, DisplayMode;
+	typedef enum {
+		alterar_display=1,
+		sair_configs =2
+	} RespostaConfigs;
+	RespostaConfigs answer_configs;
+
+	int qnt, search_corredor, search_armario, DisplayMode, ans;
+
 #pragma endregion
 
 int main()
@@ -78,50 +94,59 @@ int main()
 		
 	DisplayMenu();
 		do {
-			printf("Introduza uma opcao valida:\n");
+			printf("\nInsere uma opcao valida:\n");
 			scanf("%d", &answer_menu);
 			switch(answer_menu)
 			{
 			case ver:
-				system("CLS");
+				CLEAR_SCREEN();
 				DisplayMenuVisualizacoes();
 				do{
-					printf("Insere uma opcao valida:\n");
+					printf("\nInsere uma opcao valida:\n");
 					scanf("%d", &answer_ver);
 					switch(answer_ver)
 					{
 					case total:
+						CLEAR_SCREEN();
 						if(DisplayMode==1){
 							MostraProdutos(ListaProdutos);
+							LINE_BREAK();
 							DisplayMenuVisualizacoes();
 						}else{
 							printf("Introduza o nome do ficheiro sem extensao: ");
 							scanf("%s", &filename);
 							GuardaPesquisaTotal(ListaProdutos, filename);
-							printf("\n");
+							LINE_BREAK();
 							DisplayMenuVisualizacoes();
 						}
 						break;
-					case corredor:
+					case corredor: //falta acabar
+						CLEAR_SCREEN();
 						break;
-					case armario:
+					case armario: //falta acabar
+						CLEAR_SCREEN();
 						break;
 					case coordenadas:
+						CLEAR_SCREEN();
 						printf("Insere o numero do corredor: ");
 						scanf("%d", &search_corredor);
 						printf("\nInsere o numero do armario: ");
 						scanf("%d", &search_armario);
 						if(DisplayMode==1){
 							MostraProdutobyCoordenadas(ListaProdutos, search_corredor, search_armario);
+							LINE_BREAK();
+							DisplayMenuVisualizacoes();
 						} else {
+							LINE_BREAK();
 							printf("Introduza o nome do ficheiro sem extensao: ");
 							scanf("%s", &filename);
 							GuardaPesquisabyCoordenadas(ListaProdutos, filename, search_corredor, search_armario);
-							printf("\n");
+							LINE_BREAK();
 							DisplayMenuVisualizacoes();
 						}
 						break;
 					case quantidade:
+						CLEAR_SCREEN();
 						printf("\nIntroduz a quantidade do produto:");
 						scanf("%d", &qnt);
 						if(DisplayMode==1){
@@ -130,23 +155,44 @@ int main()
 							printf("Introduza o nome do ficheiro sem extensao: ");
 							scanf("%s", &filename);
 							GuardaPesquisabyID(ListaProdutos, filename, qnt);
-							printf("\n");
+							LINE_BREAK();
 							DisplayMenuVisualizacoes();
 						}
 						break;
 					}
 				}while(answer_ver != sair_ver);
+				DisplayMenu();
 				break;
 			case gerir:
-				system("CLS");
+				CLEAR_SCREEN();
 				DisplayMenuEncomendas();
 				break;
 			case stocks:
+				CLEAR_SCREEN();
 				DisplayMenuStocks();
 				break;
 			case configuracoes:
+				CLEAR_SCREEN();
 				DisplayMenuConfiguracoes();
-				
+				do{
+					printf("\nInsere uma opcao valida:\n");
+					scanf("%d", &answer_configs);
+					switch(answer_configs){
+					case alterar_display:
+						printf("\t\tModos de Display\n\n");
+						ShowDisplayMode(DisplayMode);
+						printf("Pretende alterar o modo de display ? (1 - sim \\ 2 - nao): ");
+						scanf("%d", &ans);
+						if(ans == 1)
+							UpdateDisplayMode(DisplayMode);
+						else
+							printf("Modo de display nao alterado.\n");
+						LINE_BREAK();
+						DisplayMenuConfiguracoes();
+						break;
+					}
+				} while (answer_configs != sair_configs);
+				DisplayMenu();
 			}
 		} while (answer_menu != sair_menu);
 		printf("Ate uma proxima!\n");

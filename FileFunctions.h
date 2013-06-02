@@ -5,8 +5,7 @@
 #include<time.h>
 
 #define RETAIL_FILE_NAME "retail.bin"
-#define CONFIG_FILE_NAME "config.txt"
-#define SEARCH_FOLDER "Pesquisas/"
+#define CONFIG_FILE_NAME "config.dat"
 
 	FILE * OpenFile(FILE **file, char *FileName, char *mode)	{
 		*file = fopen(FileName, mode);
@@ -70,3 +69,18 @@
 
 		return DisplayMode;
 	}
+
+	void UpdateDisplayMode(int CurrentDisplayMode)
+	{
+		FILE *file;
+		
+		file=OpenFile(&file, CONFIG_FILE_NAME, "w");
+
+		if(CurrentDisplayMode==1)
+			fprintf(file, "%d", 0);
+		else
+			fprintf(file, "%d", 1);
+
+		fclose(file);
+	}
+

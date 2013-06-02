@@ -57,3 +57,11 @@ void DisplayMenuConfiguracoes()
 	printf("\t\t 1 - Modo de Display\n");
 	printf("\t\t 2 - Sair\n");
 }
+
+void ShowDisplayMode(int DisplayMode)
+{
+	if(DisplayMode == 1)
+		printf("Consola - 1 (Activo)\nFicheiro de Texto - 0\n\n");
+	else
+		printf("Consola - 1\nFicheiro de Texto - 0 (Activo)\n\n");
+}

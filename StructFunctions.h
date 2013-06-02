@@ -13,6 +13,33 @@ typedef struct produto produto, *pno;
 		pno proximo;
 	};
 
+pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
+	{
+		int NCorredores, NArmarios, NProdutos_p_Armario, cArmario=1, cCorredor=1;   //vars do armazem
+		int i, j, h;																//vars dos for's
+
+		fread(&NArmarios, sizeof(int), 1, RetailFile);   //Obtem numero de armarios
+		fread(&NCorredores, sizeof(int), 1, RetailFile); //Obtem numero de corredores
+	
+		for (i = 0; i < NCorredores; i++) {
+			for (h = 0; h < NArmarios; h++) {
+				fread(&NProdutos_p_Armario, sizeof(int), 1, RetailFile);
+				for(j = 0; j < NProdutos_p_Armario; j++) { 
+					//Guarda dados na struct
+					ListaProdutos=AdicionaProduto(ListaProdutos, GetData(RetailFile), GetData(RetailFile), cCorredor, cArmario);
+				}
+				cArmario++;
+				if (cArmario >= 4)
+				{
+					cArmario = 1;
+				}
+			
+			}
+			cCorredor++;
+		}
+		return ListaProdutos;
+	}
+
 int verifica_lista(pno prod)
 {
 	if (prod == NULL)
@@ -60,6 +87,8 @@ pno AdicionaProduto(pno prod,int IDProduto, int Quantidade, int corredor, int ar
 	return prod;
 }
 
+/* Mostra na Consola */
+
 void MostraProdutos(pno prod)
 {
 	while(prod != NULL)
@@ -95,7 +124,7 @@ void MostraProdutobyCoordenadas(pno prod, int corredor, int armario)
 	while(prod != NULL)
 	{
 		if(prod->corredor == corredor && prod->armario == armario) {
-			printf("\nProduto Encontrado:\n\n");
+			printf("\nProduto Encontrado:\n\nCorredor: %d\nArmario: %d\n\n", corredor, armario);
 			printf("ID Produto: %d\n",prod->IDProduto);
 			printf("Quantidade: %d\n", prod->quantidade);
 		}
@@ -103,46 +132,52 @@ void MostraProdutobyCoordenadas(pno prod, int corredor, int armario)
 
 		if(prod == NULL)
 		{
-			printf("\nProduto nao encontrado!\n");
+			printf("\nProduto nao encontrado ou lista chegou ao fim!\n");
 			return;
 		}
 	}
 
 }
 
-pno EliminaProd(pno prod, int ProdID)
+void MostraProdutobyCorredor(pno prod, int corredor)
 {
-	pno actual, anterior = NULL;
-	actual = prod;
-
-	while(actual != NULL && actual->IDProduto != ProdID) //percorre toda a lista ate encontrar o ProdID passado por parametro
-	{
-		anterior = actual;
-		actual = actual->proximo;
-	}
-
-	if(actual==NULL)
-		return prod;
-	if(anterior==NULL)
-		prod = actual->proximo;
-	else
-		anterior->proximo = actual->proximo;
-
-	free(actual);
-	return prod;
-}
-
-void ApagaStruct(pno prod)
-{
-	pno aux;
-
 	while(prod != NULL)
 	{
-		aux = prod;
+		if(prod->corredor == corredor) {
+			printf("\nProduto Encontrado:\n\nCorredor: %d\n\n", corredor);
+			printf("ID Produto: %d\n",prod->IDProduto);
+			printf("Quantidade: %d\n", prod->quantidade);
+		}
 		prod = prod->proximo;
-		free(aux);
+
+		if(prod == NULL)
+		{
+			printf("\nProduto nao encontrado ou lista chegou ao fim!\n");
+			return;
+		}
 	}
 }
+
+void MostraProdutobyArmario(pno prod, int armario)
+{
+	while(prod != NULL)
+	{
+		if(prod->armario == armario) {
+			printf("\nProduto Encontrado:\n\nArmario: %d\n\n", armario);
+			printf("ID Produto: %d\n",prod->IDProduto);
+			printf("Quantidade: %d\n", prod->quantidade);
+		}
+		prod = prod->proximo;
+
+		if(prod == NULL)
+		{
+			printf("\nProduto nao encontrado ou lista chegou ao fim!\n");
+			return;
+		}
+	}
+}
+
+/* Escreve para Ficheiro de Texto */
 
 void GuardaPesquisaTotal(pno prod, char *filename)
 {
@@ -230,13 +265,13 @@ void GuardaPesquisabyCoordenadas(pno prod, char *filename, int corredor, int arm
 	{
 		if(prod->corredor == corredor && prod->armario == armario) {
 			fprintf(file, "ID Produto: %d\n",prod->IDProduto);
-			fprintf(file, "Quantidade: %d\n", prod->quantidade);
+			fprintf(file, "Quantidade: %d\n\n", prod->quantidade);
 		}
 		prod = prod->proximo;
 
 		if(prod == NULL)
 		{
-			printf("\nProduto nao encontrado!\n");
+			printf("\nProduto nao encontrado ou lista chegou ao fim!\n");
 		}
 	}
 
@@ -246,6 +281,11 @@ void GuardaPesquisabyCoordenadas(pno prod, char *filename, int corredor, int arm
 
 	printf("\nFicheiro %s criado com sucesso.\n\n", filename);
 
+}
+
+void GuardaPesquisabyCorredor(pno prod, char *filename, int corredor)
+{
+	// ESTOU AQUI!!
 }
 
 void GuardaStruct(pno prod)
@@ -262,29 +302,36 @@ void GuardaStruct(pno prod)
 	fclose(RetailFile);
 }
 
-pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
-	{
-		int NCorredores, NArmarios, NProdutos_p_Armario, cArmario=1, cCorredor=1;   //vars do armazem
-		int i, j, h;																//vars dos for's
+pno EliminaProd(pno prod, int ProdID)
+{
+	pno actual, anterior = NULL;
+	actual = prod;
 
-		fread(&NArmarios, sizeof(int), 1, RetailFile);   //Obtem numero de armarios
-		fread(&NCorredores, sizeof(int), 1, RetailFile); //Obtem numero de corredores
-	
-		for (i = 0; i < NCorredores; i++) {
-			for (h = 0; h < NArmarios; h++) {
-				fread(&NProdutos_p_Armario, sizeof(int), 1, RetailFile);
-				for(j = 0; j < NProdutos_p_Armario; j++) { 
-					//Guarda dados na struct
-					ListaProdutos=AdicionaProduto(ListaProdutos, GetData(RetailFile), GetData(RetailFile), cCorredor, cArmario);
-				}
-				cArmario++;
-				if (cArmario >= 4)
-				{
-					cArmario = 1;
-				}
-			
-			}
-			cCorredor++;
-		}
-		return ListaProdutos;
+	while(actual != NULL && actual->IDProduto != ProdID) //percorre toda a lista ate encontrar o ProdID passado por parametro
+	{
+		anterior = actual;
+		actual = actual->proximo;
 	}
+
+	if(actual==NULL)
+		return prod;
+	if(anterior==NULL)
+		prod = actual->proximo;
+	else
+		anterior->proximo = actual->proximo;
+
+	free(actual);
+	return prod;
+}
+
+void ApagaStruct(pno prod)
+{
+	pno aux;
+
+	while(prod != NULL)
+	{
+		aux = prod;
+		prod = prod->proximo;
+		free(aux);
+	}
+}
