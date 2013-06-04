@@ -10,7 +10,7 @@ typedef struct produto produto, *pno;
 	
 int verifica_lista(pno prod)
 {
-	if (prod == NULL)
+	if (prod == NULL) //verifica se a lista está vazia
 		return 1;
 	else
 		return 0;
@@ -18,6 +18,7 @@ int verifica_lista(pno prod)
 
 void preenche(pno prod, int IDProduto, int Quantidade, int corredor, int armario)
 {
+	//preenche a varias com dados passados por argumentos
 	prod->IDProduto=IDProduto;
 	prod->quantidade=Quantidade;
 	prod->corredor=corredor;
@@ -27,54 +28,55 @@ void preenche(pno prod, int IDProduto, int Quantidade, int corredor, int armario
 
 pno AdicionaProduto(pno prod,int IDProduto, int Quantidade, int corredor, int armario)
 {
-
 	pno novo, aux;
-	novo = malloc(sizeof(produto));
+	novo = malloc(sizeof(produto)); //aloca espaço
 
-	if(novo == NULL)
+	if(novo == NULL) //verifica se alocou o espaço com sucesso
 	{
 		printf("Erro na alocacao de memoria!\n");
 		return prod;
 	}
 
-	preenche(novo, IDProduto, Quantidade, corredor, armario);
+	preenche(novo, IDProduto, Quantidade, corredor, armario); //preenche os campos do nó a ser inserido
 
-	if(verifica_lista(prod))
+	if(verifica_lista(prod)) 
 	{
-		prod = novo;
+		prod = novo; //se a lista estiver vazia / for nova, entao insere no topo da lista
 	}
 	else
 	{
-			//Introduz no fim da lista
+			//senao insere no fim da lista
 			aux = prod;
 			while(aux->proximo != NULL)
 				aux = aux->proximo;
 			aux->proximo = novo;
 	}
-	
 	return prod;
 }
 
-pno AdicionaProdutoAtCoords(pno prod,int IDProduto, int Quantidade, int corredor, int armario)
+pno AdicionaProdutoBetween(pno prod,int IDProduto, int Quantidade, int corredor, int armario)
 {
 	pno novo, aux;
-	novo = malloc(sizeof(produto));
+	novo = malloc(sizeof(produto)); //aloca espaço
 
-	if(novo == NULL)
+	if(novo == NULL) //verifica se alocou o espaço com sucesso
 	{
 		printf("Erro na alocacao de memoria!\n");
 		return prod;
 	}
 
-	preenche(novo, IDProduto, Quantidade, corredor, armario);
+	preenche(novo, IDProduto, Quantidade, corredor, armario); //preenche os campos do nó a ser inserido
 
-	if(prod == NULL || (novo->corredor && novo->armario) < (prod->armario && prod->corredor))
+	if(prod == NULL || novo->corredor < prod->corredor) //se a lista estiver vazia OU o corredor do argumento for "menor" que o corredor da lista, insere no inicio
 	{
 		novo->proximo = prod;
 		prod = novo;
-	} else {
+	}
+	else
+	{
+		//senao instroduz asseguir ao corredor passado por parametro
 		aux = prod;
-		while (aux->proximo != NULL && (novo->corredor && novo->armario) > (aux->proximo->corredor &&aux->proximo->armario))  
+		while(aux->proximo != NULL && novo->corredor > aux->proximo->corredor)
 			aux = aux->proximo;
 		novo->proximo = aux->proximo;
 		aux->proximo = novo;
@@ -82,19 +84,23 @@ pno AdicionaProdutoAtCoords(pno prod,int IDProduto, int Quantidade, int corredor
 	return prod;
 }
 
-pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
+pno InitializeWarehouse(pno ListaProdutos)
 	{
 		int NCorredores, NArmarios, NProdutos_p_Armario, cArmario=1, cCorredor=1;   //vars do armazem
 		int i, j, h;																//vars dos for's
+		FILE *RetailFile;
+
+		RetailFile = OpenFile(&RetailFile, RETAIL_FILE_NAME, "rb"); //abre ficheiro para leitura
 
 		fread(&NArmarios, sizeof(int), 1, RetailFile);   //Obtem numero de armarios
 		fread(&NCorredores, sizeof(int), 1, RetailFile); //Obtem numero de corredores
 	
-		for (i = 0; i < NCorredores; i++) { //5
-			for (h = 0; h < NArmarios; h++) { //3
-				fread(&NProdutos_p_Armario, sizeof(int), 1, RetailFile);
-				for(j = 0; j < NProdutos_p_Armario; j++) { 
-					//Guarda dados na struct
+		/* Algoritmo para leitura do ficheiro binário */
+		for (i = 0; i < NCorredores; i++) { //percorre os corredores
+			for (h = 0; h < NArmarios; h++) { //percorre os armarios
+				fread(&NProdutos_p_Armario, sizeof(int), 1, RetailFile); //obtem o nº de produtos por armario
+				for(j = 0; j < NProdutos_p_Armario; j++) { //percore o nº de produtos por armario
+					//Guarda dados na lista
 					ListaProdutos=AdicionaProduto(ListaProdutos, GetData(RetailFile), GetData(RetailFile), cCorredor, cArmario);
 				}
 				cArmario++;
@@ -105,6 +111,7 @@ pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
 				}
 			}
 		}
+		fclose(RetailFile); //fecha o ficheiro
 		return ListaProdutos;
 	}
 
@@ -114,10 +121,10 @@ int ObtemCoordsLivres()
 	FILE *file;
 	char coords[2];
 
-	file=OpenFile(&file, RETAIL_FILE_NAME, "r");
+	file=OpenFile(&file, RETAIL_FILE_NAME, "r"); //abre o ficheiro
 	
-	fread(&NArmarios, sizeof(int), 1, file);
-	fread(&NCorredores, sizeof(int), 1, file); 
+	fread(&NArmarios, sizeof(int), 1, file); //obtem n armarios
+	fread(&NCorredores, sizeof(int), 1, file); //obtem n corredores
 
 	for(i = 0; i < NCorredores; i++){
 		for(j = 0; j < NArmarios; j++){
@@ -132,19 +139,16 @@ int ObtemCoordsLivres()
 					cArmario = 1;
 					cCorredor++;
 				}
-
-			if(fim > NProdutos_p_Armario){
+			if(fim > NProdutos_p_Armario){ //compara n_produtos_por_armario com ultima leitura
 				fim = NProdutos_p_Armario;
-				coords[0]=cCorredor;
-				coords[1]=cArmario-1;
+				coords[0]=cCorredor; //armazena "coordenadas"
+				coords[1]=cArmario-1; //armazena "coordenadas"
 			}
-			
 		}
-		
 	}
-	fclose(file);
-	fim=concatena(coords[0], coords[1]);
-	return fim;
+	fclose(file); //fecha ficheiro
+	fim=concatena(coords[0], coords[1]); //concatena os 2 ints (coordenadas)
+	return fim; //devolve as coordenadas
 }
 
 /* Mostra na Consola */
@@ -180,11 +184,11 @@ void MostraProdutobyQuantidade(pno prod, int Quantidade)
 
 void MostraProdutobyCoordenadas(pno prod, int corredor, int armario)
 {
-
+	printf("Corredor: %d\nArmario: %d\n", corredor, armario);
 	while(prod != NULL)
 	{
 		if(prod->corredor == corredor && prod->armario == armario) {
-			printf("\nProduto Encontrado:\n\nCorredor: %d\nArmario: %d\n\n", corredor, armario);
+			printf("\nProduto Encontrado:\n\n");
 			printf("ID Produto: %d\n",prod->IDProduto);
 			printf("Quantidade: %d\n", prod->quantidade);
 		}
@@ -201,12 +205,13 @@ void MostraProdutobyCoordenadas(pno prod, int corredor, int armario)
 
 void MostraProdutobyCorredor(pno prod, int corredor)
 {
+	printf("Corredor: %d\n", corredor);
 	while(prod != NULL)
 	{
 		if(prod->corredor == corredor) {
-			printf("\nProduto Encontrado:\n\nCorredor: %d\n\n", corredor);
+			printf("\nProduto Encontrado:\n\n");
 			printf("ID Produto: %d\n",prod->IDProduto);
-			printf("Quantidade: %d\n", prod->quantidade);
+			printf("Quantidade: %d\n\n", prod->quantidade);
 		}
 		prod = prod->proximo;
 
@@ -220,12 +225,14 @@ void MostraProdutobyCorredor(pno prod, int corredor)
 
 void MostraProdutobyArmario(pno prod, int armario)
 {
+	printf("Armario: %d\n", armario);
 	while(prod != NULL)
 	{
 		if(prod->armario == armario) {
-			printf("\nProduto Encontrado:\n\nArmario: %d\n\n", armario);
+			printf("\nProduto Encontrado:\n\n");
 			printf("ID Produto: %d\n",prod->IDProduto);
 			printf("Quantidade: %d\n", prod->quantidade);
+			printf("Corredor: %d\n\n", prod->corredor);
 		}
 		prod = prod->proximo;
 
@@ -270,7 +277,7 @@ void GuardaPesquisaTotal(pno prod, char *filename)
 	printf("\nFicheiro %s criado com sucesso.\n\n", filename);
 }
 
-void GuardaPesquisabyID(pno prod, char *filename, int Quantidade)
+void GuardaPesquisabyQnt(pno prod, char *filename, int Quantidade)
 {
 
 	FILE *file;
@@ -420,64 +427,54 @@ void GuardaPesquisabyArmario(pno prod, char *filename, int armario)
 
 /* Gestão de Stocks */
 
-pno ReporStocks(pno prod, char *filename)
+void ActualizaStock(pno prod, int id, int quantidade)
+{
+	int valor, corredor, armario;
+	pno lista_inicio = prod;
+
+	while (prod != NULL) //enquanto a lista nao chegar ao fim (estiver nula)
+	{
+		if(prod->IDProduto == id) //compara os ids com o id passado por parametro
+		{
+			prod->quantidade = prod->quantidade + quantidade; //produto existe, adiciona nova quantidade
+			return;
+		}
+		prod = prod -> proximo; //passa para o proximo produto da lista
+	}
+	prod = lista_inicio->proximo; //aponta a lista para o primeiro produto
+	valor = ObtemCoordsLivres(); //obtem coordenadas onde alocar novos produtos
+	corredor = valor/10; //obtem o corredor
+	armario = valor%10; //obtem o armario
+	prod = AdicionaProdutoBetween(prod, id, quantidade, corredor, armario); //adiciona o novo produto
+}
+
+void ObtemStock(char *filename, pno prod)
 {
 	FILE *file;
-	pno novo, aux;
 	char *lixo={NULL};
 	int id, quantidade, valor, armario, corredor;
 	char *ext=".txt";	
-	strcat(filename, ext);
+	strcat(filename, ext); //concatena o nome do ficheiro passado por parametro com a extensão
 
-	novo=malloc(sizeof(pno));
+	file = OpenFile(&file, filename, "r"); //abre o ficheiro
 
-	file = OpenFile(&file, filename, "r");
+	lixo = BufferSpaceAlloc(&file, lixo); //aloca o espaço necessario
 
-	lixo = BufferSpaceAlloc(&file, lixo);
-	
-	while (!feof(file))
+	while (!feof(file)) //enquanto nao for fim do ficheiro:
 	{
-
-		fscanf(file, "%d%s%d", &id, lixo, &quantidade);
-		printf("ID: %d\nQNT: %d\n\n", id, quantidade);
-
-		while (prod != NULL && prod->IDProduto != id)
-			prod = prod -> proximo;
-		
-		if(prod != NULL)
-		{
-			printf("Existe!\n");
-			//prod->quantidade = prod->quantidade + quantidade; //produto existe, adiciona nova quantidade
-			//return prod;
-		} else {
-			printf("Nao Existe!\n");
-			valor = ObtemCoordsLivres();
-			corredor = valor/10;
-			armario = valor%10;
-
-			preenche(novo, id, quantidade, corredor, armario);
-
-			if(verifica_lista(prod))
-				prod = novo;
-			else {
-				aux = prod;
-				while(aux->proximo != NULL)
-					aux = aux->proximo;
-				aux->proximo = novo;
-			}
-		}
+		fscanf(file, "%d%s%d", &id, lixo, &quantidade); //obtem id e quantidade do ficheiro || Formato: "ID: QUANTIDADE"
+		ActualizaStock(prod, id, quantidade);
 	}
-	fclose(file);
-	return prod;
+	fclose(file); //fecha ficheiro
 }
 
-
+/* Outras Operações */
 
 void GuardaStruct(pno prod)
 {
 	FILE *RetailFile;
 
-	RetailFile = OpenFile(&RetailFile, RETAIL_FILE_NAME, "rb");
+	RetailFile = OpenFile(&RetailFile, "save.bin", "wb");
 
 	while(prod != NULL)
 	{
@@ -507,16 +504,4 @@ pno EliminaProd(pno prod, int ProdID)
 
 	free(actual);
 	return prod;
-}
-
-void ApagaStruct(pno prod)
-{
-	pno aux;
-
-	while(prod != NULL)
-	{
-		aux = prod;
-		prod = prod->proximo;
-		free(aux);
-	}
 }
