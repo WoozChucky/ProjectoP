@@ -1,8 +1,3 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<string.h>
-
 typedef struct produto produto, *pno;
 	struct produto
 	{
@@ -12,9 +7,7 @@ typedef struct produto produto, *pno;
 		int armario;
 		pno proximo;
 	};
-
-
-
+	
 int verifica_lista(pno prod)
 {
 	if (prod == NULL)
@@ -62,6 +55,33 @@ pno AdicionaProduto(pno prod,int IDProduto, int Quantidade, int corredor, int ar
 	return prod;
 }
 
+pno AdicionaProdutoAtCoords(pno prod,int IDProduto, int Quantidade, int corredor, int armario)
+{
+	pno novo, aux;
+	novo = malloc(sizeof(produto));
+
+	if(novo == NULL)
+	{
+		printf("Erro na alocacao de memoria!\n");
+		return prod;
+	}
+
+	preenche(novo, IDProduto, Quantidade, corredor, armario);
+
+	if(prod == NULL || (novo->corredor && novo->armario) < (prod->armario && prod->corredor))
+	{
+		novo->proximo = prod;
+		prod = novo;
+	} else {
+		aux = prod;
+		while (aux->proximo != NULL && (novo->corredor && novo->armario) > (aux->proximo->corredor &&aux->proximo->armario))  
+			aux = aux->proximo;
+		novo->proximo = aux->proximo;
+		aux->proximo = novo;
+	}
+	return prod;
+}
+
 pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
 	{
 		int NCorredores, NArmarios, NProdutos_p_Armario, cArmario=1, cCorredor=1;   //vars do armazem
@@ -70,8 +90,8 @@ pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
 		fread(&NArmarios, sizeof(int), 1, RetailFile);   //Obtem numero de armarios
 		fread(&NCorredores, sizeof(int), 1, RetailFile); //Obtem numero de corredores
 	
-		for (i = 0; i < NCorredores; i++) {
-			for (h = 0; h < NArmarios; h++) {
+		for (i = 0; i < NCorredores; i++) { //5
+			for (h = 0; h < NArmarios; h++) { //3
 				fread(&NProdutos_p_Armario, sizeof(int), 1, RetailFile);
 				for(j = 0; j < NProdutos_p_Armario; j++) { 
 					//Guarda dados na struct
@@ -81,13 +101,51 @@ pno InitializeRetailWarehouse(pno ListaProdutos, FILE *RetailFile)
 				if (cArmario >= 4)
 				{
 					cArmario = 1;
+					cCorredor++;
 				}
-			
 			}
-			cCorredor++;
 		}
 		return ListaProdutos;
 	}
+
+int ObtemCoordsLivres()
+{
+	int i, j, h, inicial=2, lixo, NCorredores, NArmarios, NProdutos_p_Armario=10, fim=10, cArmario=1, cCorredor=1;
+	FILE *file;
+	char coords[2];
+
+	file=OpenFile(&file, RETAIL_FILE_NAME, "r");
+	
+	fread(&NArmarios, sizeof(int), 1, file);
+	fread(&NCorredores, sizeof(int), 1, file); 
+
+	for(i = 0; i < NCorredores; i++){
+		for(j = 0; j < NArmarios; j++){
+			fread(&NProdutos_p_Armario, sizeof(int), 1, file);
+			for(h = 0; h < NProdutos_p_Armario; h++) {
+				fread(&lixo, sizeof(int), 1, file);
+				fread(&lixo, sizeof(int), 1, file);
+			}
+			cArmario++;
+				if (cArmario >= 4)
+				{
+					cArmario = 1;
+					cCorredor++;
+				}
+
+			if(fim > NProdutos_p_Armario){
+				fim = NProdutos_p_Armario;
+				coords[0]=cCorredor;
+				coords[1]=cArmario-1;
+			}
+			
+		}
+		
+	}
+	fclose(file);
+	fim=concatena(coords[0], coords[1]);
+	return fim;
+}
 
 /* Mostra na Consola */
 
@@ -199,7 +257,8 @@ void GuardaPesquisaTotal(pno prod, char *filename)
 
 	while(prod != NULL)
 	{
-		fprintf(file, "ID: %d\nQuantidade: %d\n\n", prod->IDProduto, prod->quantidade);
+		fprintf(file, "ID: %d\nQuantidade: %d\n", prod->IDProduto, prod->quantidade);
+		fprintf(file, "Coordenadas: Corredor->%d    Armario->%d\n\n", prod->corredor, prod->armario);
 		prod = prod->proximo;
 	}
 
@@ -358,6 +417,61 @@ void GuardaPesquisabyArmario(pno prod, char *filename, int armario)
 
 	printf("\nFicheiro %s criado com sucesso.\n\n", filename);
 }
+
+/* Gestão de Stocks */
+
+pno ReporStocks(pno prod, char *filename)
+{
+	FILE *file;
+	pno novo, aux;
+	char *lixo={NULL};
+	int id, quantidade, valor, armario, corredor;
+	char *ext=".txt";	
+	strcat(filename, ext);
+
+	novo=malloc(sizeof(pno));
+
+	file = OpenFile(&file, filename, "r");
+
+	lixo = BufferSpaceAlloc(&file, lixo);
+	
+	while (!feof(file))
+	{
+
+		fscanf(file, "%d%s%d", &id, lixo, &quantidade);
+		printf("ID: %d\nQNT: %d\n\n", id, quantidade);
+
+		while (prod != NULL && prod->IDProduto != id)
+			prod = prod -> proximo;
+		
+		if(prod != NULL)
+		{
+			printf("Existe!\n");
+			//prod->quantidade = prod->quantidade + quantidade; //produto existe, adiciona nova quantidade
+			//return prod;
+		} else {
+			printf("Nao Existe!\n");
+			valor = ObtemCoordsLivres();
+			corredor = valor/10;
+			armario = valor%10;
+
+			preenche(novo, id, quantidade, corredor, armario);
+
+			if(verifica_lista(prod))
+				prod = novo;
+			else {
+				aux = prod;
+				while(aux->proximo != NULL)
+					aux = aux->proximo;
+				aux->proximo = novo;
+			}
+		}
+	}
+	fclose(file);
+	return prod;
+}
+
+
 
 void GuardaStruct(pno prod)
 {

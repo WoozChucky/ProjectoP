@@ -2,64 +2,26 @@
 #include<string.h>
 #include<stdlib.h>
 #include<time.h>
-#include "Displays.h"
+#include "displays.h"
 #include "FileFunctions.h"
 #include "StructFunctions.h"
-
-#ifdef _WIN32
-#    define CLEAR_SCREEN() system("cls")
-#else
-#    define CLEAR_SCREEN() system("clear")
-#endif
-#define LINE_BREAK() printf("\n");
-
-#pragma region Declaração_De_Variáveis
+#include "main.h"
 
 	pno ListaProdutos = NULL;
 	FILE *RetailFile;
-	char *buffer={NULL};
 	char filename[256];
-	
-	typedef enum {
-		ver=1, 
-		gerir=2, 
-		stocks=3, 
-		configuracoes=4, 
-		sair_menu=5
-	} RespostaMenu;			
-	RespostaMenu answer_menu;
-
-	typedef enum {
-		total=1, 
-		corredor=2, 
-		armario=3, 
-		coordenadas=4, 
-		quantidade=5, 
-		sair_ver=6
-	} RespostaVer;
-	RespostaVer answer_ver;
-
-	typedef enum {
-		alterar_display=1,
-		sair_configs =2
-	} RespostaConfigs;
-	RespostaConfigs answer_configs;
-
 	int qnt, search_corredor, search_armario, DisplayMode, ans;
-
-#pragma endregion
 
 int main()
 {
+	/* Obtem o modo de display das pesquisas (1 - consola / 0 - ficheiro) */
 	DisplayMode=GetDisplayMode();
-
 	/*Abre o ficheiro de retail*/
 	RetailFile = OpenFile(&RetailFile, RETAIL_FILE_NAME, "rb");
 	/* Preenche a lista dos produtos lendo o ficheiro de retail */
 	ListaProdutos=InitializeRetailWarehouse(ListaProdutos, RetailFile);
 	/* fecha o ficheiro */
 	fclose(RetailFile);
-	
 
 	/*			Corredor 1
 		3P 2unidades 4 4unidades 7 78unidades 1	
@@ -90,6 +52,7 @@ int main()
 		
 	DisplayMenu();
 		do {
+			DisplayMode=GetDisplayMode();
 			printf("\nInsere uma opcao valida:\n");
 			scanf("%d", &answer_menu);
 			switch(answer_menu)
@@ -191,9 +154,24 @@ int main()
 				CLEAR_SCREEN();
 				DisplayMenuEncomendas();
 				break;
-			case stocks:					//ACABAR
+			case stocks:					//A SER FEITO
 				CLEAR_SCREEN();
 				DisplayMenuStocks();
+				do {
+					printf("\nInsere uma opcao valida:\n");
+					scanf("%d", &answer_stocks);
+					switch(answer_stocks)
+					{
+					case repor:
+						printf("Introduza o nome do ficheiro sem extensao: ");
+						scanf("%s", &filename);
+						//ListaProdutos=ReporStocks(ListaProdutos, filename);
+						//CLEAR_SCREEN();
+						//DisplayMenuStocks();
+						break;
+					}
+				} while (answer_stocks != sair_stocks);
+				DisplayMenu();
 				break;
 			case configuracoes:
 				CLEAR_SCREEN();

@@ -1,7 +1,3 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-
 void DisplayMenu()
 {
 	printf("\t****************************************************\n");
@@ -38,10 +34,8 @@ void DisplayMenuVisualizacoes()
 void DisplayMenuStocks()
 {
 	printf("\t\t\t      **Menu de Stocks**\n\n");
-	printf("\t\t 1 - Actualizar Quantidades\n");
-	printf("\t\t 2 - Adicionar Novo Produto\n");
-	printf("\t\t 3 - Repor Produtos\n");
-	printf("\t\t 4 - Sair\n");
+	printf("\t\t 1 - Repor Stocks\n");
+	printf("\t\t 2 - Sair\n");
 }
 
 void DisplayMenuEncomendas()

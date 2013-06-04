@@ -1,11 +1,6 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<string.h>
-#include<time.h>
-
 #define RETAIL_FILE_NAME "retail.bin"
 #define CONFIG_FILE_NAME "config.dat"
+
 
 	FILE * OpenFile(FILE **file, char *FileName, char *mode)	{
 		*file = fopen(FileName, mode);
