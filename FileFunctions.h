@@ -1,81 +1,77 @@
-#define RETAIL_FILE_NAME "retail.bin"
+/*
+Vale das Flores Retail
+DEIS @ ISEC 2013
+
+Fábio Fonseca - 21210424
+Nuno Silva - 21220170
+
+Fcheiro header com funções de abertura / leitura / escrita de ficheiros
+*/
+#define RETAIL_FILE_NAME "save.bin"
 #define CONFIG_FILE_NAME "config.dat"
 
 
-	FILE * OpenFile(FILE **file, char *FileName, char *mode)	{
-		*file = fopen(FileName, mode);
-		if (!*file)
-		{
-			printf("Erro ao abrir %s\n", FileName);
-			return;
-		}
-		return *file;
-	}
+FILE * OpenFile(FILE **file, char *FileName, char *mode)
+{
+    *file = fopen(FileName, mode); //abre o ficheiro (nome do ficheiro seguido do modo de abertura)
+    if (!*file) //verifica se abriu correctamente
+        {
+            printf("Erro ao abrir %s\n", FileName);
+            return;
+        }
+    return *file; //devolve ficheiro aberto
+}
 
-	char * BufferSpaceAlloc(FILE **RetailFile, char *buffer)
-	{
-		int FileLenght;
+char * BufferSpaceAlloc(FILE **RetailFile, char *buffer)
+{
+    int FileLenght;
 
-		fseek(*RetailFile, 0, SEEK_END);
-		FileLenght=ftell(*RetailFile);
-		fseek(*RetailFile, 0, SEEK_SET);
+    fseek(*RetailFile, 0, SEEK_END); //coloca o ponteiro no fim do ficheiro
+    FileLenght=ftell(*RetailFile); //obtem a comprimento do ficheiro
+    fseek(*RetailFile, 0, SEEK_SET); //coloca o ponteiro no inicio do ficheiro
 
-		buffer=(char *)malloc(FileLenght+1);
+    buffer=(char *)malloc(FileLenght+1); //aloca o espaco
 
-		if(!buffer)
-		{
-			printf("Erro ao alocar memoria!\n");
-			return;
-		}
-		return buffer;
-	}
+    if(!buffer) //verifica se alocou bem o espaço
+        {
+            printf("Erro ao alocar memoria!\n");
+            return;
+        }
+    return buffer; //devolve variavel com espaço alocado
+}
 
-	int GetData(FILE *file)
-	{
-		int variavel;
-		fread(&variavel, sizeof(int), 1, file);
-		return variavel;
-	}
+int GetData(FILE *file)
+{
+    int variavel;
+    fread(&variavel, sizeof(int), 1, file); //lê valor e do ficheiro passao por argumento e guarda em variavel
+    return variavel; //devolve a variavel
+}
 
-	void UpdateSession(char *filename)
-	{
-		FILE *file;
-		time_t DataActual;
-		char* c_DataActual;
+int GetDisplayMode()
+{
+    FILE *file;
+    int DisplayMode=2;
 
-		file = OpenFile(&file, filename, "a");
+    file=OpenFile(&file, CONFIG_FILE_NAME, "r"); //abre ficheiro de configuração para leitura
 
-		DataActual = time(NULL);
-		c_DataActual = ctime(&DataActual);
-		fprintf(file, "Ultimo Acesso: %s", c_DataActual);
-		fclose(file);
-	}
+    fscanf(file, "%d", &DisplayMode); //obtem modo de display e guarda em variavel
 
-	int GetDisplayMode()
-	{
-		FILE *file;
-		int DisplayMode=2;
-		
-		file=OpenFile(&file, CONFIG_FILE_NAME, "r");
+    fclose(file); //fecha ficheiro
 
-		fscanf(file, "%d", &DisplayMode);
+    return DisplayMode; //devolve modo de display
+}
 
-		fclose(file);
+void UpdateDisplayMode(int CurrentDisplayMode)
+{
+    FILE *file;
 
-		return DisplayMode;
-	}
+    file=OpenFile(&file, CONFIG_FILE_NAME, "w"); //abre ficheiro em modo de escrita
 
-	void UpdateDisplayMode(int CurrentDisplayMode)
-	{
-		FILE *file;
-		
-		file=OpenFile(&file, CONFIG_FILE_NAME, "w");
+    if(CurrentDisplayMode==1) //altera modo de display consoante o valor do argumento
+        fprintf(file, "%d", 0); //escreve no ficheiro
+    else
+        fprintf(file, "%d", 1); //escreve no ficheiro
 
-		if(CurrentDisplayMode==1)
-			fprintf(file, "%d", 0);
-		else
-			fprintf(file, "%d", 1);
-
-		fclose(file);
-	}
+    fclose(file);//fecha ficheiro
+}
 
