@@ -1,4 +1,6 @@
 /*
+main.h
+
 Vale das Flores Retail
 DEIS @ ISEC 2013
 
@@ -34,6 +36,13 @@ typedef enum
     sair_ver=6
 } RespostaVer;
 RespostaVer answer_ver;
+
+typedef enum
+{
+    processar=1,
+    sair_encomendas=2
+} RespostaEncomendas;
+RespostaEncomendas answer_encomendas;
 
 typedef enum
 {

@@ -1,0 +1,4 @@
+Encomenda EUROCER
+1: 78
+3: 12
+7: 5
